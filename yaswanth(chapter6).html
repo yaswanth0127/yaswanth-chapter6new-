@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <hr>
+        <h3 style="font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif; font-weight:20px">Chapter 6. Configuring Property Files for Locally Launched Applications</h3>
+        <p>The NetView management console provides the capability to launch local applications on the NetView management console topology console workstation, such as a web browser, to view a specific web address in context or to start a Telnet session to the host where a managed resource resides. A properties file associated with these locally launched applications defines the specific executable file to launch for each supported platform. The web browser and Telnet commands are already configured. However, you can check the properties file to ensure that the commands specified can be successfully run without a specific dependency on the current drive and directory. For all other local applications, define appropriate entries in the properties file.<br><br>
+Configure the local applications in the following way:<br>
+1.&nbsp;&nbsp;&nbsp;&nbsp;Define which application executable file is to be used on each platform where the topology console runs. This can be configured on a user basis or on a server-wide basis. This configuration is done at the topology server.,<br>
+2.&nbsp;&nbsp;&nbsp;&nbsp;Define the command entries that are to be added to the topology console pop-up menu. This configuration is done at the topology server.<br></p>
+<hr style="border: 1px; ">
+<h3>Defining the Pop-up Menu Items</h3>
+<p>The cpebatch utility, on the NetView management console topology server workstation, can be used to define commands that appear on the topology console pop-up menu. This is done by creating a response file and using it as input to the cpebatch utility. You can generate response files manually, with a standard text editor. To define an application to the NetView management console command menu, define the following variables in the command response file:<br>
+v  EXIT_NAME to be IHSXTJAM<bR>
+v COMMAND_STRING to be com.tivoli.ihs.nmc.cmd.IhsCommandInvoker cmdname var1=value1 var2=value2...<br><br>
+
+Although the command name is arbitrary, the properties file needs a matching entry (cmdname) for the command name to be resolved. If no match exists, then the command name is run as is.<br></p>
+
+<h3  style="margin-left: 70px;">Response File Input</h3>
+<p>To enable the application, command information must be added to the commands database through the command profile editor utility.<br><br>
+The following example shows an entry in a command response file:<br>
+<h14>COMMAND = (</h14><br>
+
+<h11>NAME = CISCO_BLUE</h11><br>
+<h11>MENU_STRING = "CISCO APPN node detail view"</h11><br>
+<h11> RESOURCE_INDEP=NO</h11><br>
+<h11>HTML_HELP_FILE =</h11><br> 
+<h11>HTML_HELP_ANCHOR =</h11><br> 
+<h11> MIN_RESOURCES = 1</h11><br>
+<h11>MAX_RESOURCES</h11>
+<h11>= 1 VERIFY = NO</h11><br>
+<h11>PAGE = (</h11><br>
+<h11>COMMAND_STRING = "com.tivoli.ihs.nmc.cmd.IhsCommandInvoker browser</h11><br>
+<h11>URL=http://%RODM.ManagementURL%/cgibin/cw-blue/snamaps\?rqx=9&a;=nd&ip;=</h11><br>
+<h11>%ipaddress%&rc;=public"</h11><br>
+<h11>EXIT_NAME = IHSXTJAM</h11><br>
+<h11>MANAGER_NAME = ANY </h11><br>
+<h11>HTML_HELP_FILE = </h11><br>
+<h11>HTML_HELP_ANCHOR =</h11><br>
+<h11>CLIENT_PLATFORM_LIST =</h11><br>
+<h11>GENERIC</h11><br>
+<h11>TARGET_PLATFORM_LIST = </h11><br>
+<h11>GENERIC</h11><br>
+<h style="margin-left: 40px;">)</h><br>
+<h12 style="margin-left: 20px;" >)</h12><br>
+
+<b>Note:</b> This is only an example. Specify the web address for your own environment in this section:<br>
+URL=http://%RODM.ManagementURL%/cgibin/cw-blue/snamaps\?rqx=9&a;=nd&ip;=
+%ipaddress%&rc;=public<br>
+
+The entry for COMMAND_STRING determines how the command is called. For example, COMMAND_STRING for the browser command must start with the keyword com.tivoli.ihs.nmc.cmd.IhsCommandInvoker followed by browser.<br><br>
+
+COMMAND_STRING contains a definition for the web address field. A variable can be included in the web address field that pulls data from Resource Object Data Manager (RODM). The following example shows the syntax of the variable name:<br>
+%RODM.ManagementURL%<br><br>
+
+This variable is not allowed on resource independent commands. For more detailed information about RODM variables, see Table 32 on page 48.<br>
+
+<h3>Creating a Response File for Browser</h3>
+<p>You can create response files manually, with a standard text editor. In addition, when creating a response file for the browser command, you can use the registration file conversion utility if a Distributed NetView registration file was provided by an equipment vendor. To manually create a response file, see “Response File Input” on page 45.</p><br>
+
+<p>If you received a Distributed NetView Navigation Bar Registration file, you can use the registration file conversion utility to convert that file to a response file. Change to one of the following directories:</p><br>
+<p>v   For Windows systems: cd %BINDIR%\..\generic_unix\TDS\client\bin<br>
+v  For AIX or Linux systems: cd $BINDIR/../generic_unix/TDS/client/bin<br>
+The following syntax is for the registration file OEMNAVBAR.REG:<br>
+tappxx .. com.tivoli.ihs.nmc.server.IhsHttpParse <path>OEMNAVBAR.REG<br>
+
+Where xx is the appropriate platform from which the topology console is running. See Appendix B, “Topology Console Commands,” on page 123 for more information about the <b>tappxx</b> command.<br>
+
+<b>Note:</b> The default output is device dependent, but the menu entry is shown for any manager. Any changes to the response file need to be made before running the cpebatch command.<br>
+
+The previous syntax generates an OEMNAVBAR.REG.rsp file. The generated response file is used as input to the cpebatch utility in the following way:<br>
+<b>cpebatch</b> OEMNAVBAR.REG.rsp -i -g<br>
+Changes to the right-click pop-up menu take effect immediately.</p><br>
+<hr style="border: 1px;">
+
+<h3>Defining the Properties File</h3>
+<p>The properties file has a heading section that defines generic information followed by sections defining a specific executable file and command string for each platform. Any line starting with a semicolon is considered a comment line.
+Comments cannot be on the same line as command text.<br><br>
+The following list shows file name types:<br>
+v Default File Name: %BINDIR%\TDS\server\db\current\settings\ defaultcmdinv.properties<br>
+v User File Name: %BINDIR%\TDS\server\db\current\settings\<br>
+<user_name>cmdinv.properties<br>
+<b>Note:</b> The file name must be lowercase regardless of the user name.<br><br>
+
+In the properties file, define the generic and operating system sections. Table 30 displays the information for the generic section of the properties file.<br><br>
+<i >Table 30. Generic Section of Properties File</i></p><br>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td style="float: left; border-style: none;">command.desc</td>
+        <td>Defines the application entry. You can define as many different application specifications as necessary. This information is not used outside this file.<br><br>
+            In these examples, replace command with the name of the command you are defining.<br><br></td>
+    </tr>
+</table><br>
+<h21 style="margin-left:  110px;">Table 31 displays the information for the browser section of the &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;  properties file.</h21><br><br>
+<i style="margin-left:  110px;">Table 31. Browser Section of Properties File</i><br><br>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+        
+    </tr>
+    <tr>
+        <td style="float: left; border-style: none;">browser.usebuiltin</td>
+        <td>If set to TRUE, the built-in NetView management console browser is used. All operating system entries are ignored.<br><br>
+            This field is specific to the browser command and is not used for others.<br><br></td>
+    </tr>
+</table><br><br>
+<h21 style="margin-left:  110px;">Table 32 on page 48 displays the information for the operating system &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;section of the properties file.</h21><br><br>
+<i style="margin-left:  110px;">Table 32. Operating System Section of Properties File</i><br>
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td style="float: left; border-style: none;">command.x.platform</td>
+        <td>Identifies the operating system for which this entry is valid.<br>
+            The following operating systems are valid:<br>
+            v Windows<br>
+            &nbsp; &nbsp;&nbsp; &nbsp;<b>Note:</b> The Java os.name system property &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;contains the operating system name.<br>
+            v Linux<br><br>
+            You can use wild cards (? or *) to specify multiple versions of an operating system. The file is processed from beginning to end until the first acceptable match is found. You can use the
+            ? wild card to specify a one-character wild card and the * wild card to specify a multiple-character wild card.<br><br>
+        </td>
+    </tr>
+    <tr>
+        <td style="float: left; border-style: none;">command.x.run</td>
+        <td>	Identifies the command used to run the executable file that is
+            to run on this operating system. This executable file must be configured to run from the command line of the system on which it is to operate.<br><br>
+            For example, if a user's system has a Windows platform and the user must be in the c:\firefox directory to launch the web browser, their properties file might define the browser.x.run field as:<br><br>
+            browser.1.run = c: & cd \\firefox & firefox<br><br>
+            
+            This example uses the (&) to string command-line operations together, changing to the c:\firefox directory before issuing the netscape command. The & string concatenation technique is supported on Windows platforms only. You can use the batch file approach on other platforms which do not support stringing multiple command-line operations together.<br>
+            <b>Notes:</b><br>
+            1.&nbsp; &nbsp;Notice that you must specify a double back &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;slash (\\) in the command line. In these &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;properties files, the back slash is treated as an &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;escape character similar to the way a C compiler &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;treats a back slash. So when you need a back &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;slash character in your path name, use two &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;back slashes.<br>
+            2.&nbsp; &nbsp;&nbsp;Avoid using environment variables, as they &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;might not be resolved in the final command &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;string.<br>
+            3.&nbsp; &nbsp;You might want to specify a directory greater &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;than eight characters in length, such as&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; Program Files in the following example:<br>
+            &nbsp;&nbsp; &nbsp;&nbsp;browser.1.run = cmd /c start<br>
+            &nbsp;&nbsp; &nbsp;&nbsp;/Dc:\\Program Files\\Mozilla Firefox\\firefox.exe<br><br>
+            
+            &nbsp; &nbsp;&nbsp;To be sure you run the preferred application, &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;enclose your full path name in quotation marks, &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;prefaced with a back slash, as in the following &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;example:<br>
+            &nbsp; &nbsp;&nbsp;browser.1.run = cmd /c start<br>
+            &nbsp; &nbsp;&nbsp;/D\"c:\\Program Files\\Mozilla Firefox\\firefox.exe\"<br><br>
+            You can also create a script file in a known directory and specify the script file as the executable file. Then the contents of the script file can be written to change to the proper directory and start the browser.<br><br>
+        </td>
+    </tr>
+</table><br><br>
+<i style="margin-left:  110px;">Table 32. Operating System Section of Properties File (continued)</i><br><br>
+<table>
+    <tr >
+        <th >Field</th>
+        <th >Description</th>
+    </tr>
+    <tr>
+        <td style="float: left; border-style: none;">command.x.args</td>
+        <td>Identifies the argument to be passed to the specified<br>
+            executable file. Anything enclosed in percent (%) signs is considered a substitution variable that can later be resolved by NetView management console or RODM, or passed in from the command response file.<br><br>
+            For example, the %url% substitution variable in the browser.x.arg field defines a specific web address to be displayed when the browser is started. The specific web address is defined in the command response file.<br><br>
+            The substitution variables are gathered from three locations:<br><br>
+            v in the command string keyword of the CPE response &nbsp; &nbsp; &nbsp;file, where the variable and value are defined as &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; var=value. For example, see “Response File Input” &nbsp; &nbsp; &nbsp;&nbsp; on page 45 for the web address variable.<br><br>
+            v %ihs.xxx% substitution variables. The character &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; strings (xxx) following the period are the keys in the &nbsp; &nbsp; &nbsp;&nbsp; IhsCmdInfo.java and IhsResInfo.java objects. The &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;substitution variable is the value in these objects. See &nbsp; &nbsp; the NetView Management Console Productivity Kit for &nbsp; &nbsp; &nbsp;more information.<br><br>
+            v %RODM.xxx% prefix substitution variables. The &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;character strings (xxx) following the period are the &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;field  names in RODM for the selected objects. Use &nbsp; &nbsp; &nbsp;&nbsp; these only for resource specific commands.<br><br>
+            &nbsp; You can optionally specify a colon (:) and a token &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;number to retrieve a single period-delimited token. For &nbsp; &nbsp; example, the MyName field of a NetView Resource &nbsp; &nbsp;&nbsp; Manager aggregate object in RODM is in the form:&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; NRM.CNM01.AUTO1. If you want to extract just &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; "AUTO1", you can specify:<br>
+            &nbsp; &nbsp;%RODM.Myname:3% This extracts the third period-&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; delimited token.<br>
+        </td>
+    </tr>
+</table>
+
+    </p>
+    <p>The following example illustrates a properties file:<br><br>
+        ;-------------------------------------------------------------------------<br>
+        ; Your comments go here.<br>
+        ;-------------------------------------------------------------------------<br><br>
+        
+        browser.desc	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= Open Web browser and show URL browser.<br>
+        usebuiltin &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= false<br>
+        
+        browser.1.platform = Windows *<br>
+         browser.1.run	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= cmd /c start <br>
+         browser.1.args	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %url%<br>
+        
+        browser.2.platform = <br>
+        * browser.2.run	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= firefox <br>
+        browser.2.args	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %url%<br><br>
+        ;----------------------------------------<br><br>
+        ping.1.platform	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= Windows *<br>
+        ping.1.run	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= cmd /c start ping -t<br>
+        ping.1.args	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %d2cmdargs%<br>
+        ping.2.platform	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= Linux<br>
+        ping.2.run	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= xterm -e ping -s<br>
+        ping.2.args	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %d2cmdargs%<br>
+    </p>
+    <p>
+        ping.3.platform	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= *<br>
+ping.3.run	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= xterm -e ping<br>
+ping.3.args	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %d2cmdargs%<br><br>
+;----------------------------------------<br><br>
+
+telnet.1.platform = Windows <br>
+* telnet.1.run	= cmd /c start telnet tel<br>
+net.1.args	= %d2cmdargs%<br><br>
+telnet.2.platform = *<br>
+telnet.2.run	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= xterm -e telnet<br>
+telnet.2.args	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %d2cmdargs%<br><br>
+
+<b >Notes:</b><br><br>
+1.<h15 >The Telnet definitions are shipped as a default in the properties file. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You might need to override these definitions to customize the &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;command for your operating system.</h15><br>
+2.<h15 >The %d2 cmdargs% variable is needed to support the <b>RunData2 </b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;command. The <b>RunData2 </b>command uses the Remote Console&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;support in RODM that might define the Telnet command to run. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;See “%REMOTECONSOLE%” on page 107 for more information. The &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d2cmdargs variable is assumed to contain an IP address.</h15><br>
+3.<h15 >The Telnet support in NetView management console also defines &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%d2cmdargs%</h15><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;when launching a Telnet session. The Telnet command appears in the &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;right-click pop-up menu in a view. The d2cmdargs variable is &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assumed to contain an IP address.<br><br>
+
+You can define as many different application specifications as necessary. Number each one incrementally. For example, the previous example shows three specifications for Telnet, numbered incrementally from 1 to 3. The number of specifications you can create is not limited; however, no numbers can be skipped.<br>
+    </p>
+    <hr>
+    <h3 >Part 3. Using NetView Management Console</h3>
+    </body>
+</html>
+<style>
+    body{ margin-left:  330px;
+    margin-right: 300px;
+    font-family: Arial, Helvetica, sans-serif;
+    }
+    hr{
+    background-color: black;
+    height:2px;
+    }
+    p{
+
+   
+    margin-left:  110px; }
+    table, th, td {
+  border: 1px solid black;
+  border-collapse:collapse ;}
+  h11{
+    margin-left: 20px;
+    font-size: smaller;
+  }
+  h14{font-size: smaller;}
+  table{
+    margin-left:  110px;
+  }
+  h15{
+    margin-left: 10px;
+
+  }
+</style>
